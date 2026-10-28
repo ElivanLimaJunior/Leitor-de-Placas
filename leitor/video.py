@@ -28,8 +28,10 @@ def desenhar_caixa(quadro: np.ndarray, x1: int, y1: int, x2: int, y2: int, texto
     cv2.rectangle(quadro, (x1, y1), (x2, y2), VERDE, 2)
     (larg_txt, alt_txt), base = cv2.getTextSize(texto, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
     topo = max(y1 - alt_txt - base - 4, 0)
-    cv2.rectangle(quadro, (x1, topo), (x1 + larg_txt + 8, topo + alt_txt + base + 4), VERDE, -1)
-    cv2.putText(quadro, texto, (x1 + 4, topo + alt_txt + 2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, PRETO, 2)
+    # Se o rótulo passar da borda direita, puxa para a esquerda para continuar legível.
+    esquerda = max(min(x1, quadro.shape[1] - larg_txt - 8), 0)
+    cv2.rectangle(quadro, (esquerda, topo), (esquerda + larg_txt + 8, topo + alt_txt + base + 4), VERDE, -1)
+    cv2.putText(quadro, texto, (esquerda + 4, topo + alt_txt + 2), cv2.FONT_HERSHEY_SIMPLEX, 0.7, PRETO, 2)
 
 
 def escrever_info(quadro: np.ndarray, texto: str) -> None:
