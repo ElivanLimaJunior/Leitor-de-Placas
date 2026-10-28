@@ -26,14 +26,14 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-A `open-image-models` instala junto o `opencv-python-headless` (OpenCV sem janelas). Se a janela não abrir, reinstale o OpenCV completo:
+A `open-image-models` e a `fast-plate-ocr` instalam junto o `opencv-python-headless` (OpenCV sem janelas). Se a janela não abrir, reinstale o OpenCV completo:
 
 ```
 pip uninstall -y opencv-python-headless opencv-python
 pip install opencv-python==5.0.0.93
 ```
 
-Na primeira execução da detecção, o modelo (cerca de 7 MB) é baixado automaticamente.
+Na primeira execução, os modelos de detecção e de OCR são baixados automaticamente.
 
 O vídeo de teste não fica no repositório. Baixe-o no Pexels (crédito abaixo) e salve-o na pasta `videos/`.
 
@@ -55,6 +55,12 @@ python -m leitor.deteccao videos/pexels_fabio_reis_de_abreu.mp4 --quadro 150
 python -m leitor.deteccao videos/pexels_fabio_reis_de_abreu.mp4 --quadro 150 --salvar capturas/q150.jpg
 ```
 
+Encontrar e ler as placas (Etapa 4). A placa lida aparece escrita sobre a imagem. A caixa fica vermelha quando o texto não forma uma placa brasileira válida:
+
+```
+python -m leitor.ocr videos/pexels_fabio_reis_de_abreu.mp4 --quadro 1200
+```
+
 Rodar os testes:
 
 ```
@@ -73,6 +79,7 @@ Vídeo obtido no [Pexels](https://www.pexels.com) e usado sob a [licença do Pex
 
 - [open-image-models](https://github.com/ankandrew/open-image-models), de ankandrew, sob a licença MIT. Usada para detectar as placas com o modelo `yolo-v9-t-384-license-plate-end2end`.
 - Os modelos de detecção são baseados no YOLOv9: Chien-Yao Wang e Hong-Yuan Mark Liao, *YOLOv9: Learning What You Want to Learn Using Programmable Gradient Information*, arXiv:2402.13616, 2024.
+- [fast-plate-ocr](https://github.com/ankandrew/fast-plate-ocr), de ankandrew, sob a licença MIT. Usada para ler os caracteres com o modelo `cct-s-v2-global-model`.
 - [ONNX Runtime](https://github.com/microsoft/onnxruntime), da Microsoft, sob a licença MIT.
 - [OpenCV](https://github.com/opencv/opencv), sob a licença Apache 2.0.
 - [NumPy](https://github.com/numpy/numpy), sob a licença BSD-3-Clause.
