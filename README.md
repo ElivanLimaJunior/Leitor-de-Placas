@@ -61,6 +61,21 @@ Encontrar e ler as placas (Etapa 4). A placa lida aparece escrita sobre a imagem
 python -m leitor.ocr videos/pexels_fabio_reis_de_abreu.mp4 --quadro 1200
 ```
 
+Medir a taxa de acerto (Etapa 5):
+
+```
+python -m leitor.medicao coletar videos/pexels_fabio_reis_de_abreu.mp4
+python -m leitor.medicao avaliar capturas/leituras_pexels_fabio_reis_de_abreu.csv data/gabarito_pexels_fabio_reis_de_abreu.csv --limite 0.80
+```
+
+O `coletar` analisa 1 a cada 10 quadros (`--passo`), salva todas as leituras em `capturas/` e cria em `data/` um rascunho de gabarito com as placas candidatas. Antes de avaliar, o rascunho precisa ser conferido à mão, olhando o vídeo: corrija ou apague as placas erradas e acrescente as que faltaram. Para isso, use o `conferir`, que mostra o vídeo com as leituras por cima:
+
+```
+python -m leitor.medicao conferir videos/pexels_fabio_reis_de_abreu.mp4 --inicio 30
+```
+
+Teclas: `espaço` pausa, `a`/`d` voltam ou avançam um quadro (com o vídeo pausado) e `q` ou `Esc` fecham. O `avaliar` mostra acertos, falsos positivos e falsos negativos para cada limite de confiança. Planilhas e gabarito ficam fora do Git, porque contêm placas reais.
+
 Rodar os testes:
 
 ```
