@@ -1,0 +1,47 @@
+# Ambiente virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+
+# Vídeos e imagens de teste (podem conter placas reais: LGPD)
+*.mp4
+*.avi
+*.mkv
+*.mov
+data/
+videos/
+capturas/
+
+# Bancos de dados
+*.db
+*.sqlite
+*.sqlite3
+
+# Modelos baixados
+*.onnx
+models/
+
+# Logs
+*.log
+logs/
+
+# IDE / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

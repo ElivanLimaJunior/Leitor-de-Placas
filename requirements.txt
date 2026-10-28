@@ -1,0 +1,6 @@
+# Etapa 1: imagem e vídeo
+opencv-python==5.0.0.93
+numpy==2.5.4
+
+# Etapa 2: testes
+pytest==9.2.0
