@@ -26,6 +26,15 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
+A `open-image-models` instala junto o `opencv-python-headless` (OpenCV sem janelas). Se a janela não abrir, reinstale o OpenCV completo:
+
+```
+pip uninstall -y opencv-python-headless opencv-python
+pip install opencv-python==5.0.0.93
+```
+
+Na primeira execução da detecção, o modelo (cerca de 7 MB) é baixado automaticamente.
+
 O vídeo de teste não fica no repositório. Baixe-o no Pexels (crédito abaixo) e salve-o na pasta `videos/`.
 
 ## Como usar
@@ -37,6 +46,14 @@ python -m leitor.video videos/pexels_fabio_reis_de_abreu.mp4
 ```
 
 Teclas: `espaço` pausa e retoma, `q` ou `Esc` fecha. Use `--largura` para mudar o tamanho da janela (padrão: 1280).
+
+Marcar as placas numa foto ou num quadro do vídeo (Etapa 3):
+
+```
+python -m leitor.deteccao foto.jpg
+python -m leitor.deteccao videos/pexels_fabio_reis_de_abreu.mp4 --quadro 150
+python -m leitor.deteccao videos/pexels_fabio_reis_de_abreu.mp4 --quadro 150 --salvar capturas/q150.jpg
+```
 
 Rodar os testes:
 
@@ -54,7 +71,12 @@ Vídeo obtido no [Pexels](https://www.pexels.com) e usado sob a [licença do Pex
 
 ### Bibliotecas
 
-Serão listadas conforme forem adicionadas ao projeto.
+- [open-image-models](https://github.com/ankandrew/open-image-models), de ankandrew, sob a licença MIT. Usada para detectar as placas com o modelo `yolo-v9-t-384-license-plate-end2end`.
+- Os modelos de detecção são baseados no YOLOv9: Chien-Yao Wang e Hong-Yuan Mark Liao, *YOLOv9: Learning What You Want to Learn Using Programmable Gradient Information*, arXiv:2402.13616, 2024.
+- [ONNX Runtime](https://github.com/microsoft/onnxruntime), da Microsoft, sob a licença MIT.
+- [OpenCV](https://github.com/opencv/opencv), sob a licença Apache 2.0.
+- [NumPy](https://github.com/numpy/numpy), sob a licença BSD-3-Clause.
+- [pytest](https://github.com/pytest-dev/pytest), sob a licença MIT.
 
 ## Privacidade (LGPD)
 

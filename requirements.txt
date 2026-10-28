@@ -4,3 +4,6 @@ numpy==2.5.4
 
 # Etapa 2: testes
 pytest==9.2.0
+
+# Etapa 3: detecção de placas (modelo YOLO em ONNX, roda só no processador)
+open-image-models[onnx]==0.6.0
