@@ -98,6 +98,17 @@ Por que esses valores:
 python -m leitor.medicao avaliar capturas/leituras_pexels_fabio_reis_de_abreu.csv data/gabarito_pexels_fabio_reis_de_abreu.csv --limite 0.80 --largura-minima 60
 ```
 
+Gerar um registro por veículo (Etapa 6):
+
+```
+python -m leitor.processar videos/pexels_fabio_reis_de_abreu.mp4
+python -m leitor.processar videos/pexels_fabio_reis_de_abreu.mp4 --sem-janela --gabarito data/gabarito_pexels_fabio_reis_de_abreu.csv
+```
+
+Cada placa é acompanhada de um quadro para o outro, pela sobreposição das caixas (IoU) ou, se não houver, pela distância entre os centros, e o veículo recebe um número enquanto está na tela. Só as leituras que passam nos limites da Etapa 5 contam como voto, com peso pela confiança. Quando a placa some por mais de 1 segundo, o veículo vira um registro com a placa mais votada. Se a mesma placa reaparecer em até 5 segundos (por exemplo, quando outro carro passa na frente), as duas passagens são juntadas.
+
+Resultado no vídeo de teste: **17 registros, nenhum duplicado**. Foram 16 placas certas e 1 errada: FPO1620 no lugar de FPD1620, porque o OCR confunde D com O de forma sistemática nessa placa e a votação não corrige um erro que se repete. Das 19 placas do gabarito, 2 ficaram sem registro porque nunca apareceram grandes o bastante para uma leitura confiável.
+
 Rodar os testes:
 
 ```
