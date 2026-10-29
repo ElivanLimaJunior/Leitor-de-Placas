@@ -3,10 +3,12 @@
 import argparse
 import sys
 from collections import Counter
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import cv2
 
+from leitor.banco import FORMATO_DATA, Banco
 from leitor.deteccao import DetectorDePlacas, recortar
 from leitor.medicao import ler_gabarito
 from leitor.ocr import VERMELHO, LeitorDePlacas
@@ -45,7 +47,17 @@ def main() -> int:
     parser.add_argument("--sem-janela", action="store_true", help="não mostra o vídeo (mais rápido)")
     parser.add_argument("--gabarito", help="planilha com as placas certas, para comparar no final")
     parser.add_argument("--largura", type=int, default=1280, help="largura máxima da janela (padrão: 1280)")
+    parser.add_argument("--banco", help="grava os registros neste banco SQLite (ex.: data/estacionamento.db)")
+    parser.add_argument(
+        "--camera", choices=["entrada", "saida"], default="entrada", help="o que a câmera filma (padrão: entrada)"
+    )
+    parser.add_argument(
+        "--inicio", help="data e hora do começo do vídeo, AAAA-MM-DD HH:MM:SS (padrão: agora)"
+    )
     args = parser.parse_args()
+
+    inicio = datetime.strptime(args.inicio, FORMATO_DATA) if args.inicio else datetime.now()
+    banco = Banco(args.banco) if args.banco else None
 
     captura = cv2.VideoCapture(args.video)
     if not captura.isOpened():
@@ -61,6 +73,18 @@ def main() -> int:
     def anunciar(novos: list[Registro]) -> None:
         for r in novos:
             print(f"\r[{formatar_tempo(r.primeiro_quadro, fps)}] registro {len(rastreador.registros)}: {r.placa}   ")
+            if banco is None:
+                continue
+            # A hora do registro é a do começo do vídeo mais o momento em que o carro apareceu.
+            quando = (inicio + timedelta(seconds=r.primeiro_quadro / fps)).strftime(FORMATO_DATA)
+            # Confiança do registro: que fração dos votos a placa vencedora levou (1.0 = leitura unânime).
+            confianca = r.votos[r.placa] / sum(r.votos.values())
+            if args.camera == "entrada":
+                ok = banco.registrar_entrada(r.placa, quando, confianca)
+                print(f"    entrada às {quando}" if ok else "    já estava dentro: ignorado")
+            else:
+                ok = banco.registrar_saida(r.placa, quando)
+                print(f"    saída às {quando}" if ok else "    saída sem entrada registrada: ignorado")
 
     numero = -1
     while True:
@@ -98,6 +122,8 @@ def main() -> int:
     anunciar(rastreador.finalizar())
     captura.release()
     cv2.destroyAllWindows()
+    if banco:
+        banco.fechar()
 
     print(f"\n{len(rastreador.registros)} registro(s):")
     for i, r in enumerate(rastreador.registros, 1):

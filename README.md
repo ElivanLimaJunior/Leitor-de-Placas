@@ -109,6 +109,30 @@ Cada placa é acompanhada de um quadro para o outro, pela sobreposição das cai
 
 Resultado no vídeo de teste: **17 registros, nenhum duplicado**. Foram 16 placas certas e 1 errada: FPO1620 no lugar de FPD1620, porque o OCR confunde D com O de forma sistemática nessa placa e a votação não corrige um erro que se repete. Das 19 placas do gabarito, 2 ficaram sem registro porque nunca apareceram grandes o bastante para uma leitura confiável.
 
+### Banco de dados do estacionamento (Etapa 7)
+
+O banco SQLite fica em `data/estacionamento.db`, fora do Git. Ele tem duas tabelas:
+
+- `veiculos`: placas cadastradas, com proprietário e tipo (`mensalista` ou `bloqueado`). Quem não está cadastrado é tratado como avulso.
+- `acessos`: uma linha por passagem, com placa, entrada e saída. Enquanto o carro está dentro, a saída fica vazia. O banco impede que a mesma placa tenha duas entradas em aberto. A ligação com `veiculos` é feita pela placa, com LEFT JOIN, porque os avulsos não têm cadastro.
+
+Gravar os registros do vídeo no banco como entradas (ou como saídas, com `--camera saida`):
+
+```
+python -m leitor.processar videos/pexels_fabio_reis_de_abreu.mp4 --banco data/estacionamento.db --inicio "2026-10-28 08:00:00"
+```
+
+Consultas e cadastro:
+
+```
+python -m leitor.banco cadastrar GAM4069 "Ana Souza" mensalista
+python -m leitor.banco cadastrar BZR7297 "Carlos Lima" bloqueado --observacao inadimplente
+python -m leitor.banco dentro                 # quem está dentro agora?
+python -m leitor.banco historico GAM4069      # quanto tempo o carro ficou?
+python -m leitor.banco dia 2026-10-28         # acessos de um dia
+python -m leitor.banco saida GAM4069          # entrada ou saída à mão, se a câmera falhar
+```
+
 Rodar os testes:
 
 ```
