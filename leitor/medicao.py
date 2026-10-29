@@ -40,11 +40,13 @@ class LeituraColetada:
     texto_bruto: str
     placa: str | None
     conf_leitura: float
+    largura: int = 0
+    """Largura da placa na imagem, em pixels: placas pequenas (longe) são lidas pior."""
 
 
 @dataclass
 class Resultado:
-    """Números de uma avaliação, para um par de limites de confiança."""
+    """Números de uma avaliação, para uma combinação de limites."""
 
     aceitas: int
     """Leituras válidas que passaram dos limites."""
@@ -64,12 +66,19 @@ class Resultado:
 
 
 def avaliar(
-    leituras: list[LeituraColetada], gabarito: set[str], limite_leitura: float, limite_deteccao: float = 0.0
+    leituras: list[LeituraColetada],
+    gabarito: set[str],
+    limite_leitura: float,
+    limite_deteccao: float = 0.0,
+    largura_minima: int = 0,
 ) -> Resultado:
     aceitas = [
         l
         for l in leituras
-        if l.placa and l.conf_leitura >= limite_leitura and l.conf_deteccao >= limite_deteccao
+        if l.placa
+        and l.conf_leitura >= limite_leitura
+        and l.conf_deteccao >= limite_deteccao
+        and l.largura >= largura_minima
     ]
     corretas = [l for l in aceitas if l.placa in gabarito]
     erradas = Counter(l.placa for l in aceitas if l.placa not in gabarito)
@@ -86,6 +95,7 @@ def ler_leituras(caminho: Path) -> list[LeituraColetada]:
                 texto_bruto=linha["texto_bruto"],
                 placa=linha["placa"] or None,
                 conf_leitura=float(linha["conf_leitura"]),
+                largura=int(linha["x2"]) - int(linha["x1"]),
             )
             for linha in csv.DictReader(arquivo, delimiter=SEPARADOR)
         ]
@@ -204,23 +214,41 @@ def conferir(video: str, inicio: int, largura: int) -> int:
     return 0
 
 
-def imprimir_avaliacao(leituras: list[LeituraColetada], gabarito: set[str], limite_deteccao: float) -> None:
+def _linha(rotulo: str, r: Resultado, total_gabarito: int) -> str:
+    return (
+        f"  {rotulo:>6}  {r.aceitas:7d}  {r.corretas:8d}  {sum(r.erradas.values()):11d}"
+        f"  {r.precisao:8.1%}  {len(r.encontradas):5d} de {total_gabarito:<4d}  {len(r.perdidas):12d}"
+    )
+
+
+CABECALHO = "  aceitas  corretas  erradas(FP)  precisão  placas lidas  perdidas(FN)"
+
+
+def imprimir_avaliacao(
+    leituras: list[LeituraColetada], gabarito: set[str], limite: float, limite_deteccao: float, largura_minima: int
+) -> None:
     validas = sum(1 for l in leituras if l.placa)
     print(f"{len(leituras)} leituras, {validas} formaram placa válida. Gabarito: {len(gabarito)} placas.")
-    print(f"Limite de detecção fixo em {limite_deteccao:.2f}.\n")
-    print("limite  aceitas  corretas  erradas(FP)  precisão  placas lidas  perdidas(FN)")
+    print(f"Limite de detecção fixo em {limite_deteccao:.2f}.")
+
+    print(f"\nPor confiança mínima da leitura (largura mínima fixa em {largura_minima} px):")
+    print("limite" + CABECALHO)
     for i in range(0, 20):
-        limite = i / 20
-        r = avaliar(leituras, gabarito, limite, limite_deteccao)
-        print(
-            f"  {limite:.2f}  {r.aceitas:7d}  {r.corretas:8d}  {sum(r.erradas.values()):11d}"
-            f"  {r.precisao:8.1%}  {len(r.encontradas):5d} de {len(gabarito):<4d}  {len(r.perdidas):12d}"
-        )
+        r = avaliar(leituras, gabarito, i / 20, limite_deteccao, largura_minima)
+        print(_linha(f"{i / 20:.2f}", r, len(gabarito)))
+
+    print(f"\nPor largura mínima da placa (confiança mínima fixa em {limite:.2f}):")
+    print("    px" + CABECALHO)
+    for largura in range(0, 130, 10):
+        r = avaliar(leituras, gabarito, limite, limite_deteccao, largura)
+        print(_linha(str(largura), r, len(gabarito)))
 
 
-def imprimir_detalhes(leituras: list[LeituraColetada], gabarito: set[str], limite: float, limite_deteccao: float) -> None:
-    r = avaliar(leituras, gabarito, limite, limite_deteccao)
-    print(f"\nDetalhes com limite de leitura {limite:.2f}:")
+def imprimir_detalhes(
+    leituras: list[LeituraColetada], gabarito: set[str], limite: float, limite_deteccao: float, largura_minima: int
+) -> None:
+    r = avaliar(leituras, gabarito, limite, limite_deteccao, largura_minima)
+    print(f"\nDetalhes com confiança mínima {limite:.2f} e largura mínima {largura_minima} px:")
     print(f"  Acerta {len(r.encontradas)} de {len(gabarito)} placas; {r.corretas} de {r.aceitas} leituras aceitas estão certas.")
     if r.erradas:
         print("  Falsos positivos (lidas, mas fora do gabarito):")
@@ -251,7 +279,8 @@ def main() -> int:
     p_avaliar.add_argument("leituras", help="planilha gerada pelo coletar")
     p_avaliar.add_argument("gabarito", help="planilha com a coluna 'placa' conferida por você")
     p_avaliar.add_argument("--deteccao", type=float, default=0.0, help="limite mínimo de confiança da detecção")
-    p_avaliar.add_argument("--limite", type=float, help="mostra os erros em detalhe para este limite de leitura")
+    p_avaliar.add_argument("--limite", type=float, default=0.0, help="confiança mínima da leitura (padrão: 0)")
+    p_avaliar.add_argument("--largura-minima", type=int, default=0, help="largura mínima da placa em pixels (padrão: 0)")
 
     args = parser.parse_args()
 
@@ -265,9 +294,8 @@ def main() -> int:
 
     leituras = ler_leituras(Path(args.leituras))
     gabarito = ler_gabarito(Path(args.gabarito))
-    imprimir_avaliacao(leituras, gabarito, args.deteccao)
-    if args.limite is not None:
-        imprimir_detalhes(leituras, gabarito, args.limite, args.deteccao)
+    imprimir_avaliacao(leituras, gabarito, args.limite, args.deteccao, args.largura_minima)
+    imprimir_detalhes(leituras, gabarito, args.limite, args.deteccao, args.largura_minima)
     return 0
 
 

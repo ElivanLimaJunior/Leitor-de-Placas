@@ -40,5 +40,17 @@ def test_limite_alto_demais_perde_placas():
     assert r.perdidas == {"GAM4069", "FWK2707"}
 
 
+def test_largura_minima_descarta_placas_pequenas():
+    leituras = [
+        LeituraColetada(quadro=0, conf_deteccao=0.8, texto_bruto="GAM4069", placa="GAM4069", conf_leitura=1.0, largura=190),
+        # Placa de longe: lida errado, mas com confiança alta. Só o tamanho denuncia.
+        LeituraColetada(quadro=10, conf_deteccao=0.3, texto_bruto="FVK2707", placa="FVK2707", conf_leitura=0.97, largura=52),
+    ]
+    assert avaliar(leituras, GABARITO, limite_leitura=0.9).erradas == {"FVK2707": 1}
+    r = avaliar(leituras, GABARITO, limite_leitura=0.9, largura_minima=60)
+    assert not r.erradas
+    assert r.encontradas == {"GAM4069"}
+
+
 def test_precisao_sem_leituras_aceitas_e_zero():
     assert avaliar([], GABARITO, limite_leitura=0.5).precisao == 0.0

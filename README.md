@@ -65,7 +65,7 @@ Medir a taxa de acerto (Etapa 5):
 
 ```
 python -m leitor.medicao coletar videos/pexels_fabio_reis_de_abreu.mp4
-python -m leitor.medicao avaliar capturas/leituras_pexels_fabio_reis_de_abreu.csv data/gabarito_pexels_fabio_reis_de_abreu.csv --limite 0.80
+python -m leitor.medicao avaliar capturas/leituras_pexels_fabio_reis_de_abreu.csv data/gabarito_pexels_fabio_reis_de_abreu.csv --limite 0.80 --largura-minima 60
 ```
 
 O `coletar` analisa 1 a cada 10 quadros (`--passo`), salva todas as leituras em `capturas/` e cria em `data/` um rascunho de gabarito com as placas candidatas. Antes de avaliar, o rascunho precisa ser conferido à mão, olhando o vídeo: corrija ou apague as placas erradas e acrescente as que faltaram. Para isso, use o `conferir`, que mostra o vídeo com as leituras por cima:
@@ -75,6 +75,28 @@ python -m leitor.medicao conferir videos/pexels_fabio_reis_de_abreu.mp4 --inicio
 ```
 
 Teclas: `espaço` pausa, `a`/`d` voltam ou avançam um quadro (com o vídeo pausado) e `q` ou `Esc` fecham. O `avaliar` mostra acertos, falsos positivos e falsos negativos para cada limite de confiança. Planilhas e gabarito ficam fora do Git, porque contêm placas reais.
+
+### Resultados da medição
+
+Vídeo de teste: 1 a cada 10 quadros (316 quadros), 694 leituras. O gabarito tem 19 placas conferidas à mão no vídeo.
+
+| Filtro | Leituras aceitas | Precisão | Placas lidas certo |
+|---|---|---|---|
+| Nenhum | 603 | 68,3% | 19 de 19 |
+| Confiança ≥ 0,80 | 354 | 86,4% | 19 de 19 |
+| Confiança ≥ 0,80 e largura ≥ 60 px | 238 | **98,7%** | **18 de 19** |
+
+**Limites escolhidos: confiança mínima de 0,80 e placa com pelo menos 60 px de largura.**
+
+Por que esses valores:
+- Só a confiança não basta. Placas de longe (cerca de 50 px) são lidas errado *com confiança alta*: um "W" vira "V" com 97% de confiança. O tamanho da placa separa esses casos muito melhor.
+- Abaixo de 60 px, as leituras erradas disparam (40 leituras erradas com largura de 50 px, contra 3 com 60 px). Acima de 60 px, a precisão quase não melhora e o sistema começa a perder placas (16 de 19 com 70 px).
+- Acima de 0,80 de confiança, a precisão sobe pouco e uma placa a mais deixa de ser lida.
+- A placa perdida é a de um carro estacionado ao fundo, que nunca passa de 55 px. Ela não seria lida com segurança nem por uma pessoa.
+
+```
+python -m leitor.medicao avaliar capturas/leituras_pexels_fabio_reis_de_abreu.csv data/gabarito_pexels_fabio_reis_de_abreu.csv --limite 0.80 --largura-minima 60
+```
 
 Rodar os testes:
 
