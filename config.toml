@@ -1,0 +1,15 @@
+# Configuração do estacionamento. Valores em reais; tempos em minutos.
+
+[estacionamento]
+vagas = 20
+
+[precos]
+# Quem sai até este tempo depois de entrar não paga.
+tolerancia_minutos = 15
+# Valor fixo que cobre as primeiras horas.
+valor_base = 10.00
+horas_base = 3
+# Cada hora (ou fração) depois das horas base.
+valor_hora_adicional = 3.00
+# Teto por período de 24 horas.
+diaria_maxima = 40.00
