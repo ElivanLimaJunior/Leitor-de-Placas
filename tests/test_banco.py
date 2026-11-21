@@ -77,6 +77,18 @@ def test_cadastrar_de_novo_atualiza(banco):
     assert banco.tipo("GAM4069") == BLOQUEADO
 
 
+def test_apagar_antigos_mantem_recentes_e_quem_esta_dentro(banco):
+    banco.registrar_entrada("EPY4372", "2026-01-01 08:00:00")
+    banco.registrar_saida("EPY4372", "2026-01-01 09:00:00")  # antigo: apagado
+    banco.registrar_entrada("GAM4069", "2026-01-01 08:00:00")  # antigo, mas ainda dentro: fica
+    banco.registrar_entrada("FCG1890", "2026-03-25 08:00:00")
+    banco.registrar_saida("FCG1890", "2026-03-25 09:00:00")  # recente: fica
+    assert banco.apagar_antigos(dias=30, referencia="2026-04-01 00:00:00") == 1
+    assert banco.historico("EPY4372") == []
+    assert len(banco.historico("GAM4069")) == 1
+    assert len(banco.historico("FCG1890")) == 1
+
+
 def test_acessos_do_dia(banco):
     banco.registrar_entrada("EPY4372", "2026-10-28 23:50:00")
     banco.registrar_saida("EPY4372", "2026-10-29 00:20:00")
