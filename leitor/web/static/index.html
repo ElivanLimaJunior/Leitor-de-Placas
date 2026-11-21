@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portaria do Estacionamento</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Portaria</h1>
+    <nav class="abas" role="tablist">
+      <button class="aba ativa" data-aba="painel" role="tab">Painel</button>
+      <button class="aba" data-aba="lotacao" role="tab">Pátio</button>
+      <button class="aba" data-aba="relatorio" role="tab">Relatório</button>
+      <button class="aba" data-aba="cadastro" role="tab">Cadastro</button>
+    </nav>
+    <span id="relogio" class="relogio"></span>
+  </header>
+
+  <div id="fase-demo" class="fase-demo" hidden></div>
+  <div id="alerta" class="alerta" hidden></div>
+
+  <main>
+    <!-- Indicadores: uma faixa compacta, visível em todas as abas. -->
+    <div class="indicadores">
+      <div class="indicador destaque" id="cartao-vagas">
+        <span class="rotulo">Vagas livres</span>
+        <span class="numero" id="livres">–</span>
+        <div class="barra"><div class="barra-cheia" id="barra-ocupacao"></div></div>
+        <span class="detalhe" id="ocupacao">–</span>
+      </div>
+      <div class="indicador">
+        <span class="rotulo">Veículos dentro</span>
+        <span class="numero" id="ocupadas">–</span>
+      </div>
+      <div class="indicador">
+        <span class="rotulo">Faturamento hoje</span>
+        <span class="numero" id="faturamento">–</span>
+      </div>
+    </div>
+
+    <!-- PAINEL -->
+    <section id="painel" class="conteudo">
+      <div class="grade">
+        <div class="coluna">
+          <div class="bloco" id="bloco-video">
+            <h2>Câmera <span id="status-camera" class="status"></span></h2>
+            <img id="video" alt="Vídeo da câmera com as placas marcadas" hidden>
+            <p id="sem-camera" class="vazio" hidden>Nenhuma câmera ligada. Inicie com <code>--video</code> para ver ao vivo.</p>
+          </div>
+
+          <div class="bloco">
+            <h2>Entrada e saída manual</h2>
+            <form id="form-manual" class="manual">
+              <input id="placa-manual" placeholder="ABC1D23" maxlength="8" autocomplete="off" required>
+              <button type="submit" data-acao="entrada">Entrada</button>
+              <button type="submit" data-acao="saida" class="secundario">Saída</button>
+            </form>
+            <p id="resposta-manual" class="resposta" aria-live="polite"></p>
+          </div>
+
+          <div class="bloco">
+            <h2>Últimos eventos</h2>
+            <ul id="eventos" class="eventos"></ul>
+          </div>
+        </div>
+
+        <div class="coluna">
+          <div class="bloco">
+            <h2>Pátio
+              <span class="legenda">
+                <span class="item"><span class="amostra livre"></span>Livre</span>
+                <span class="item"><span class="amostra ocupada"></span>Avulso</span>
+                <span class="item"><span class="amostra mensalista"></span>Mensalista</span>
+              </span>
+            </h2>
+            <div class="patio" data-patio></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PÁTIO: lotação e quem está dentro -->
+    <section id="lotacao" class="conteudo" hidden>
+      <div class="grade grade-lotacao">
+        <div class="bloco">
+          <h2>Pátio
+            <span class="legenda">
+              <span class="item"><span class="amostra livre"></span>Livre</span>
+              <span class="item"><span class="amostra ocupada"></span>Avulso</span>
+              <span class="item"><span class="amostra mensalista"></span>Mensalista</span>
+            </span>
+          </h2>
+          <div class="patio patio-grande" data-patio></div>
+        </div>
+        <div class="bloco">
+          <h2>Dentro agora</h2>
+          <div class="tabela-rolavel limitada">
+            <table>
+              <thead><tr><th>Vaga</th><th>Placa</th><th>Tipo</th><th>Entrada</th><th>Tempo</th><th>A pagar</th></tr></thead>
+              <tbody id="dentro"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RELATÓRIO -->
+    <section id="relatorio" class="conteudo" hidden>
+      <form id="form-relatorio" class="filtro">
+        <label>De <input type="date" id="rel-de" required></label>
+        <label>Até <input type="date" id="rel-ate" required></label>
+        <button type="submit">Ver</button>
+      </form>
+      <div class="indicadores">
+        <div class="cartao"><span class="rotulo">Faturamento</span><span class="numero" id="rel-faturamento">–</span></div>
+        <div class="cartao"><span class="rotulo">Entradas</span><span class="numero" id="rel-entradas">–</span></div>
+        <div class="cartao"><span class="rotulo">Horário de pico</span><span class="numero" id="rel-pico">–</span></div>
+      </div>
+      <div class="grade">
+        <div class="bloco">
+          <h2>Entradas por hora</h2>
+          <div id="grafico-horas" class="grafico"></div>
+        </div>
+        <div class="bloco">
+          <h2>Veículos mais frequentes</h2>
+          <table>
+            <thead><tr><th>Placa</th><th>Tipo</th><th>Entradas</th></tr></thead>
+            <tbody id="frequentes"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- CADASTRO -->
+    <section id="cadastro" class="conteudo" hidden>
+      <div class="bloco">
+        <h2>Cadastrar veículo</h2>
+        <form id="form-cadastro" class="cadastro">
+          <input id="cad-placa" placeholder="Placa" maxlength="8" autocomplete="off" required>
+          <input id="cad-proprietario" placeholder="Proprietário" required>
+          <select id="cad-tipo">
+            <option value="mensalista">Mensalista</option>
+            <option value="bloqueado">Bloqueado</option>
+          </select>
+          <input id="cad-observacao" placeholder="Observação (opcional)">
+          <button type="submit">Salvar</button>
+        </form>
+        <p id="resposta-cadastro" class="resposta" aria-live="polite"></p>
+      </div>
+      <div class="bloco">
+        <h2>Veículos cadastrados</h2>
+        <div class="tabela-rolavel">
+          <table>
+            <thead><tr><th>Placa</th><th>Proprietário</th><th>Tipo</th><th>Observação</th><th></th></tr></thead>
+            <tbody id="veiculos"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

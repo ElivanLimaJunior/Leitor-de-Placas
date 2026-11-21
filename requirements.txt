@@ -10,3 +10,8 @@ open-image-models[onnx]==0.6.0
 
 # Etapa 4: leitura dos caracteres (OCR)
 fast-plate-ocr[onnx]==1.1.0
+
+# Etapa 9: painel web
+fastapi==0.165.0
+uvicorn==0.54.0
+httpx==0.28.1  # usado pelos testes do painel
