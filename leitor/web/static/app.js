@@ -3,6 +3,7 @@
 
 const ATUALIZAR_MS = 1000;
 const ALERTA_MS = 15000;
+const MODO_IMAGEM = new URLSearchParams(location.search).has("imagem");
 const NOMES_TIPO = { avulso: "Avulso", mensalista: "Mensalista", bloqueado: "Bloqueado" };
 const NOMES_SITUACAO = { liberado: "Liberado", bloqueado: "Bloqueado", lotado: "Lotado", saida: "Saída" };
 
@@ -93,7 +94,10 @@ function desenharCamera(camera, demo) {
     status.className = "status";
     return;
   }
-  if (!video.src) video.src = "/video";
+  // Com ?imagem no endereço, mostra uma foto atualizada a cada segundo em vez do vídeo contínuo
+  // (para telas que não aceitam MJPEG e para tirar capturas automáticas).
+  if (MODO_IMAGEM) video.src = `/quadro.jpg?t=${Date.now()}`;
+  else if (!video.src) video.src = "/video";
   if (demo) {
     status.textContent = NOMES_FASE[demo.fase] || demo.fase;
     status.className = `status ${camera.conectada ? "on" : "neutro"}`;

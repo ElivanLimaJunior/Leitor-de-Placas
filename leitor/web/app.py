@@ -15,7 +15,7 @@ from typing import Callable, Iterator, Literal
 
 import cv2
 from fastapi import Depends, FastAPI, HTTPException
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -287,6 +287,13 @@ def criar_app(
         if not removido:
             raise HTTPException(404, "Placa não estava cadastrada.")
         return {"mensagem": "Cadastro removido."}
+
+    @app.get("/quadro.jpg", include_in_schema=False)
+    def quadro() -> Response:
+        """Só o quadro mais recente, como foto. Útil para salvar o momento ou em telas que não aceitam MJPEG."""
+        if estado.jpeg is None:
+            raise HTTPException(404, "Nenhum quadro ainda.")
+        return Response(estado.jpeg, media_type="image/jpeg", headers={"Cache-Control": "no-store"})
 
     @app.get("/video", include_in_schema=False)
     def video() -> StreamingResponse:

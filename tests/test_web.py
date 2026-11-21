@@ -81,3 +81,12 @@ def test_relatorio(cliente):
 
 def test_video_sem_camera(cliente):
     assert cliente.get("/video").status_code == 404
+    assert cliente.get("/quadro.jpg").status_code == 404
+
+
+def test_quadro_mais_recente_como_foto(cliente):
+    cliente.app.state.estado.jpeg = b"\xff\xd8 jpeg falso \xff\xd9"
+    resposta = cliente.get("/quadro.jpg")
+    assert resposta.status_code == 200
+    assert resposta.headers["content-type"] == "image/jpeg"
+    assert resposta.content == b"\xff\xd8 jpeg falso \xff\xd9"
